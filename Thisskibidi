@@ -31,9 +31,9 @@ local Options = Fluent.Options
 
 do
     Fluent:Notify({
-        Title = "Notification",
-        Content = "This is a notification",
-        SubContent = "SubContent", -- Optional
+        Title = "Skibidi HUB",
+        Content = "ยินดีต้อนรับสู่โลกสกิบิดี้",
+        SubContent = "ด้อบๆ", -- Optional
         Duration = 5 -- Set to nil to make the notification not disappear
     })
 
@@ -65,7 +65,7 @@ local Slider = Tabs.Main:AddSlider("WalkspeedSlider", {
 local WalkspeedKeybind = Tabs.Main:AddKeybind("WalkspeedKeybind", {
     Title = "Toggle Walkspeed (เลือกปุ่มได้)",
     Mode = "Toggle", -- โหมด Toggle
-    Default = "F3",  -- ค่าปุ่มเริ่มต้น
+    Default = "X",  -- ค่าปุ่มเริ่มต้น
     Callback = function()
         walking = not walking
         if walking then
@@ -161,7 +161,7 @@ Tabs.Main:AddButton({
     local Keybind = Tabs.Main:AddKeybind("Keybind", {
         Title = "Fly",
         Mode = "Toggle", -- Always, Toggle, Hold
-        Default = "F4", -- String as the name of the keybind (MB1, MB2 for mouse buttons)
+        Default = "F1", -- String as the name of the keybind (MB1, MB2 for mouse buttons)
 
         -- Occurs when the keybind is clicked, Value is `true`/`false`
         Callback = function(Value)
@@ -268,7 +268,7 @@ end)
 local AimbotKeybind = Tabs.Main:AddKeybind("AimbotKeybind", {
     Title = "Toggle Aimbot (เลือกปุ่มได้)",
     Mode = "Toggle",
-    Default = "F2",
+    Default = "V",
     Callback = function()
         aimbotEnabled = not aimbotEnabled
         print("🎯 Aimbot: " .. (aimbotEnabled and "เปิดใช้งาน" or "ปิดแล้ว"))
@@ -471,6 +471,5 @@ ESPTab:AddToggle("EnableHealth", {
         enableESPForAllPlayers()
     end
 })
-
 
 end
