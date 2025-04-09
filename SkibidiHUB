@@ -304,20 +304,11 @@ local function removeRecoil()
     cam.CFrame = originalCFrame
 end
 
-local function removeRecoil()
-    local cam = workspace.CurrentCamera
-    local originalCFrame = cam.CFrame
-
-    -- รอ 1 เฟรมแล้วคืนค่ากล้องกลับ
-    RunService.RenderStepped:Wait()
-    cam.CFrame = originalCFrame
-end
-
 local function fireGun()
     local camera = workspace.CurrentCamera
     local startPosition = camera.CFrame.Position  -- ตำแหน่งเริ่มต้น (ตำแหน่งกล้องหรือปืน)
     local direction = (camera.CFrame.LookVector)  -- ทิศทางที่ปืนหันไป (ทิศทางข้างหน้า)
-    local range = 2000  -- กำหนดระยะยิงที่ต้องการ
+    local range = 1500  -- กำหนดระยะยิงที่ต้องการ
 
     -- คำนวณทิศทางที่ถูกต้องหลังจากที่ยิง (ไม่ให้กระสุนเบี่ยงเบนจากกล้อง)
     local correctedDirection = camera.CFrame.LookVector
@@ -339,18 +330,6 @@ local function fireGun()
     -- 🔧 เรียกใช้ระบบ No Recoil
     removeRecoil()
 end
-
--- ผูกฟังก์ชัน fireGun กับการกดปุ่ม
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    
-    -- สมมติว่าผู้เล่นกดปุ่มเมาส์ซ้ายเพื่อยิง
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        fireGun()
-    end
-end)
-
-
 
 -- ผูกฟังก์ชัน fireGun กับการกดปุ่ม
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -396,6 +375,11 @@ local function createHealthESP(player)
         
         humanoid.HealthChanged:Connect(updateHealth)
 
+        -- ลบเมื่อผู้เล่นตาย
+        player.Character:WaitForChild("Humanoid").Died:Connect(function()
+            healthBarGui:Destroy()
+        end)
+        
         -- อัปเดตบาร์เลือดครั้งแรก
         updateHealth()
         
@@ -420,6 +404,11 @@ local function createESPHighlight(player)
         highlight.Adornee = char
         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
         
+        -- ลบเมื่อผู้เล่นตาย
+        player.Character:WaitForChild("Humanoid").Died:Connect(function()
+            highlight:Destroy()
+        end)
+        
         return highlight -- Return highlight for easy removal later
     end
 end
@@ -432,6 +421,9 @@ local function enableESPForAllPlayers()
                 local highlight = createESPHighlight(player)
                 if healthEnabled then
                     local healthBarGui = createHealthESP(player)
+                    player.Character:WaitForChild("Humanoid").Died:Connect(function()
+                        healthBarGui:Destroy() -- ลบ health bar เมื่อผู้เล่นตาย
+                    end)
                 end
             else
                 -- ลบ ESP และเลือดเมื่อปิด
@@ -479,4 +471,6 @@ ESPTab:AddToggle("EnableHealth", {
         enableESPForAllPlayers()
     end
 })
+
+
 end
