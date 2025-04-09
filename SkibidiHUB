@@ -14,7 +14,7 @@ local noclip = false
 
 local Window = Fluent:CreateWindow({
     Title = "Skibidi HUB " .. Fluent.Version,
-    SubTitle = "Super Premium",
+    SubTitle = "Premium",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
@@ -65,7 +65,7 @@ local Slider = Tabs.Main:AddSlider("WalkspeedSlider", {
 local WalkspeedKeybind = Tabs.Main:AddKeybind("WalkspeedKeybind", {
     Title = "Toggle Walkspeed (เลือกปุ่มได้)",
     Mode = "Toggle", -- โหมด Toggle
-    Default = "X",  -- ค่าปุ่มเริ่มต้น
+    Default = "F3",  -- ค่าปุ่มเริ่มต้น
     Callback = function()
         walking = not walking
         if walking then
@@ -161,7 +161,7 @@ Tabs.Main:AddButton({
     local Keybind = Tabs.Main:AddKeybind("Keybind", {
         Title = "Fly",
         Mode = "Toggle", -- Always, Toggle, Hold
-        Default = "F1", -- String as the name of the keybind (MB1, MB2 for mouse buttons)
+        Default = "F4", -- String as the name of the keybind (MB1, MB2 for mouse buttons)
 
         -- Occurs when the keybind is clicked, Value is `true`/`false`
         Callback = function(Value)
@@ -268,7 +268,7 @@ end)
 local AimbotKeybind = Tabs.Main:AddKeybind("AimbotKeybind", {
     Title = "Toggle Aimbot (เลือกปุ่มได้)",
     Mode = "Toggle",
-    Default = "V",
+    Default = "F2",
     Callback = function()
         aimbotEnabled = not aimbotEnabled
         print("🎯 Aimbot: " .. (aimbotEnabled and "เปิดใช้งาน" or "ปิดแล้ว"))
@@ -294,14 +294,29 @@ local function shootBullet(fromPosition, direction, range)
 end
 
 -- ฟังก์ชันสำหรับการยิงปืน
+-- 🧯 No Recoil
+local function removeRecoil()
+    local cam = workspace.CurrentCamera
+    local originalCFrame = cam.CFrame
+
+    -- รอ 1 เฟรมแล้วคืนค่ากล้องกลับ
+    RunService.RenderStepped:Wait()
+    cam.CFrame = originalCFrame
+end
+
+-- ฟังก์ชันสำหรับการยิงปืน
 local function fireGun()
     local camera = workspace.CurrentCamera
     local startPosition = camera.CFrame.Position  -- ตำแหน่งเริ่มต้น (ตำแหน่งกล้องหรือปืน)
     local direction = (camera.CFrame.LookVector)  -- ทิศทางที่ปืนหันไป (ทิศทางข้างหน้า)
-    local range = 1000  -- กำหนดระยะยิงที่ต้องการ (สามารถตั้งให้ไกลได้ไม่จำกัด)
-    
+    local range = 1000  -- กำหนดระยะยิงที่ต้องการ
+
     shootBullet(startPosition, direction, range)
+
+    -- 🔧 เรียกใช้ระบบ No Recoil
+    removeRecoil()
 end
+
 
 -- ผูกฟังก์ชัน fireGun กับการกดปุ่ม
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -312,5 +327,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         fireGun()
     end
 end)
-
 end
