@@ -13,8 +13,8 @@ local flySpeed = 200
 local noclip = false
 
 local Window = Fluent:CreateWindow({
-    Title = "Skibidi " .. Fluent.Version,
-    SubTitle = "Hub",
+    Title = "Skibidi HUB " .. Fluent.Version,
+    SubTitle = "Premium version",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
