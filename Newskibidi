@@ -14,7 +14,7 @@ local noclip = false
 
 local Window = Fluent:CreateWindow({
     Title = "Skibidi HUB " .. Fluent.Version,
-    SubTitle = "Premium version",
+    SubTitle = "Premium",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true, -- The blur may be detectable, setting this to false disables blur entirely
@@ -52,7 +52,7 @@ local walkSpeed = 16
 local Slider = Tabs.Main:AddSlider("WalkspeedSlider", {
     Title = "Walkspeed Bypass",
     Description = "ลากเพื่อเปลี่ยนความเร็วการเดิน (Bypass)",
-    Default = 16,
+    Default = 95,
     Min = 10,
     Max = 150,
     Rounding = 1,
@@ -113,7 +113,7 @@ local WalkspeedKeybind = Tabs.Main:AddKeybind("WalkspeedKeybind", {
 local Slider = Tabs.Main:AddSlider("Slider", {
         Title = "Flyspeed Change",
         Description = "ลากเพื่อเปลี่ยนความเร็ว",
-        Default = 200,
+        Default = 30,
         Min = 20,
         Max = 30,
         Rounding = 1,
@@ -294,14 +294,29 @@ local function shootBullet(fromPosition, direction, range)
 end
 
 -- ฟังก์ชันสำหรับการยิงปืน
+-- 🧯 No Recoil
+local function removeRecoil()
+    local cam = workspace.CurrentCamera
+    local originalCFrame = cam.CFrame
+
+    -- รอ 1 เฟรมแล้วคืนค่ากล้องกลับ
+    RunService.RenderStepped:Wait()
+    cam.CFrame = originalCFrame
+end
+
+-- ฟังก์ชันสำหรับการยิงปืน
 local function fireGun()
     local camera = workspace.CurrentCamera
     local startPosition = camera.CFrame.Position  -- ตำแหน่งเริ่มต้น (ตำแหน่งกล้องหรือปืน)
     local direction = (camera.CFrame.LookVector)  -- ทิศทางที่ปืนหันไป (ทิศทางข้างหน้า)
-    local range = 1000  -- กำหนดระยะยิงที่ต้องการ (สามารถตั้งให้ไกลได้ไม่จำกัด)
-    
+    local range = 1000  -- กำหนดระยะยิงที่ต้องการ
+
     shootBullet(startPosition, direction, range)
+
+    -- 🔧 เรียกใช้ระบบ No Recoil
+    removeRecoil()
 end
+
 
 -- ผูกฟังก์ชัน fireGun กับการกดปุ่ม
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
@@ -312,5 +327,4 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         fireGun()
     end
 end)
-
 end
