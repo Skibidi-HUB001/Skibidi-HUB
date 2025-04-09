@@ -304,18 +304,52 @@ local function removeRecoil()
     cam.CFrame = originalCFrame
 end
 
--- ฟังก์ชันสำหรับการยิงปืน
+local function removeRecoil()
+    local cam = workspace.CurrentCamera
+    local originalCFrame = cam.CFrame
+
+    -- รอ 1 เฟรมแล้วคืนค่ากล้องกลับ
+    RunService.RenderStepped:Wait()
+    cam.CFrame = originalCFrame
+end
+
 local function fireGun()
     local camera = workspace.CurrentCamera
     local startPosition = camera.CFrame.Position  -- ตำแหน่งเริ่มต้น (ตำแหน่งกล้องหรือปืน)
     local direction = (camera.CFrame.LookVector)  -- ทิศทางที่ปืนหันไป (ทิศทางข้างหน้า)
-    local range = 1000  -- กำหนดระยะยิงที่ต้องการ
+    local range = 2000  -- กำหนดระยะยิงที่ต้องการ
 
-    shootBullet(startPosition, direction, range)
+    -- คำนวณทิศทางที่ถูกต้องหลังจากที่ยิง (ไม่ให้กระสุนเบี่ยงเบนจากกล้อง)
+    local correctedDirection = camera.CFrame.LookVector
+
+    -- สร้าง Ray ใหม่ที่มีทิศทางที่คำนวณ
+    local ray = Ray.new(startPosition, correctedDirection * range)
+    
+    -- ใช้ Raycast เพื่อเช็กว่ากระสุนชนอะไรหรือไม่
+    local hit, position = workspace:FindPartOnRay(ray)
+    
+    -- ถ้ากระสุนชนอะไร ให้แสดงผลลัพธ์
+    if hit then
+        print("กระสุนชน: ", hit.Name)
+        -- คุณสามารถทำการทำดาเมจหรือผลกระทบอื่น ๆ ได้ที่นี่
+    else
+        print("กระสุนพลาด")
+    end
 
     -- 🔧 เรียกใช้ระบบ No Recoil
     removeRecoil()
 end
+
+-- ผูกฟังก์ชัน fireGun กับการกดปุ่ม
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    -- สมมติว่าผู้เล่นกดปุ่มเมาส์ซ้ายเพื่อยิง
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        fireGun()
+    end
+end)
+
 
 
 -- ผูกฟังก์ชัน fireGun กับการกดปุ่ม
@@ -327,4 +361,122 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         fireGun()
     end
 end)
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "" })
+
+local espEnabled = false
+local healthEnabled = false
+
+-- ฟังก์ชันแสดงเลือดในรูปแบบบาร์สีเขียวข้างตัวแทน
+local function createHealthESP(player)
+    if not player.Character then return end
+    local char = player.Character
+    if char:FindFirstChild("Humanoid") then
+        local humanoid = char:WaitForChild("Humanoid")
+        
+        -- สร้าง BillboardGui สำหรับเลือด
+        local healthBarGui = Instance.new("BillboardGui")
+        healthBarGui.Parent = char
+        healthBarGui.Adornee = char:WaitForChild("HumanoidRootPart") -- ติดตั้งข้างตัวแทน
+        healthBarGui.Size = UDim2.new(0, 40, 0, 2) -- ขนาดเล็กลง
+        healthBarGui.StudsOffset = Vector3.new(0, 2, 0) -- ปรับให้ข้างตัว
+        healthBarGui.AlwaysOnTop = true
+        
+        -- สร้างกรอบบาร์เลือด
+        local healthBar = Instance.new("Frame")
+        healthBar.Parent = healthBarGui
+        healthBar.Size = UDim2.new(1, 0, 1, 0)
+        healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- สีเขียว
+        healthBar.BorderSizePixel = 0
+        
+        -- ฟังก์ชันอัปเดตบาร์เลือด
+        local function updateHealth()
+            local healthPercent = humanoid.Health / humanoid.MaxHealth
+            healthBar.Size = UDim2.new(healthPercent, 0, 1, 0)
+        end
+        
+        humanoid.HealthChanged:Connect(updateHealth)
+
+        -- อัปเดตบาร์เลือดครั้งแรก
+        updateHealth()
+        
+        return healthBarGui -- Return the healthBarGui for easy removal later
+    end
+end
+
+-- ฟังก์ชันการสร้างไฮไลท์ที่ครอบตัวผู้เล่น (ใช้ Highlight แทนกรอบ)
+local function createESPHighlight(player)
+    if not player.Character then return end
+    local char = player.Character
+    if char:FindFirstChild("HumanoidRootPart") then
+        local humanoidRootPart = char:WaitForChild("HumanoidRootPart")
+        
+        -- สร้าง Highlight ใหม่สำหรับตัวละคร
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = char
+        highlight.FillColor = Color3.fromRGB(255, 0, 0) -- สีแดง
+        highlight.FillTransparency = 0.5
+        highlight.OutlineColor = Color3.fromRGB(255, 0, 0) -- สีแดง
+        highlight.OutlineTransparency = 0.5
+        highlight.Adornee = char
+        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        
+        return highlight -- Return highlight for easy removal later
+    end
+end
+
+-- ฟังก์ชันการมองเห็นทะลุกำแพง
+local function enableESPForAllPlayers()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer then
+            if espEnabled then
+                local highlight = createESPHighlight(player)
+                if healthEnabled then
+                    local healthBarGui = createHealthESP(player)
+                end
+            else
+                -- ลบ ESP และเลือดเมื่อปิด
+                if player.Character then
+                    -- ลบ Highlight
+                    local highlight = player.Character:FindFirstChildOfClass("Highlight")
+                    if highlight then highlight:Destroy() end
+                    -- ลบ Health ESP
+                    local healthBarGui = player.Character:FindFirstChildOfClass("BillboardGui")
+                    if healthBarGui then healthBarGui:Destroy() end
+                end
+            end
+        end
+    end
+end
+
+-- ฟังก์ชันเปิด/ปิด ESP และเลือด
+local function toggleESP()
+    espEnabled = not espEnabled
+    enableESPForAllPlayers()
+end
+
+-- ฟังก์ชันเปิด/ปิดเลือด
+local function toggleHealthESP()
+    healthEnabled = not healthEnabled
+    enableESPForAllPlayers()
+end
+
+-- เพิ่ม Toggle ESP ใน UI
+ESPTab:AddToggle("EnableESP", {
+    Title = "Enable ESP (ทะลุกำแพง)",
+    Default = false,
+    Callback = function(value)
+        espEnabled = value
+        enableESPForAllPlayers()
+    end
+})
+
+-- เพิ่ม Toggle เลือดใน UI
+ESPTab:AddToggle("EnableHealth", {
+    Title = "Enable Health ESP",
+    Default = false,
+    Callback = function(value)
+        healthEnabled = value
+        enableESPForAllPlayers()
+    end
+})
 end
